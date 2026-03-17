@@ -1,5 +1,5 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('tareas.db');
+
+
 
 const express = require('express');
 const app = express();
@@ -39,7 +39,9 @@ res.json({ok:true});
 });
 
 });
-
+app.get("/", (req,res)=>{
+res.send("Bot de tareas funcionando");
+});
 app.listen(PORT, () => {
 console.log("Servidor web corriendo en http://localhost:3000");
 });
@@ -48,10 +50,20 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const client = new Client({
-authStrategy: new LocalAuth(),
+authStrategy: new LocalAuth({
+dataPath: "./session"
+}),
 puppeteer: {
 headless: true,
-args: ['--no-sandbox', '--disable-setuid-sandbox']
+args: [
+"--no-sandbox",
+"--disable-setuid-sandbox",
+"--disable-dev-shm-usage",
+"--disable-accelerated-2d-canvas",
+"--no-first-run",
+"--no-zygote",
+"--single-process"
+]
 }
 });
 
