@@ -71,7 +71,7 @@ client.on('ready', () => {
 console.log('Bot conectado a WhatsApp');
 });
 
-client.on('message_create', message => {
+client.on('message', message => {
 
 let texto = message.body;
 console.log("Mensaje recibido:", texto);
