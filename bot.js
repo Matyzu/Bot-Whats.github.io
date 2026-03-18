@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 app.use(express.json());
 
+// crear tabla
 db.prepare(`CREATE TABLE IF NOT EXISTS tareas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     materia TEXT,
@@ -18,94 +19,104 @@ db.prepare(`CREATE TABLE IF NOT EXISTS tareas (
 
 // obtener tareas
 app.get("/tareas", (req,res)=>{
-const rows = db.prepare(
-"SELECT * FROM tareas ORDER BY fecha_entrega ASC"
-).all();
-res.json(rows);
+  const rows = db.prepare(
+    "SELECT * FROM tareas ORDER BY fecha_entrega ASC"
+  ).all();
+  res.json(rows);
 });
 
 // eliminar tarea
 app.delete("/tareas/:id",(req,res)=>{
-let id = req.params.id;
-db.prepare("DELETE FROM tareas WHERE id=?").run(id);
-res.json({ok:true});
+  let id = req.params.id;
+  db.prepare("DELETE FROM tareas WHERE id=?").run(id);
+  res.json({ok:true});
 });
 
 app.get("/", (req,res)=>{
-res.send("Bot de tareas funcionando");
+  res.send("Bot de tareas funcionando");
 });
 
 app.listen(PORT, () => {
-console.log("Servidor web corriendo en puerto", PORT);
+  console.log("Servidor web corriendo en puerto", PORT);
 });
+
+
+// ================= WHATSAPP =================
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const puppeteer = require("puppeteer");
 
-// ✅ CLIENT BIEN DEFINIDO (SIN DUPLICADOS)
 const client = new Client({
-authStrategy: new LocalAuth({
-dataPath: "./session"
-}),
-puppeteer: {
-headless: true,
-executablePath: puppeteer.executablePath(),
-args: [
-"--no-sandbox",
-"--disable-setuid-sandbox",
-"--disable-dev-shm-usage",
-"--disable-accelerated-2d-canvas",
-"--no-first-run",
-"--no-zygote",
-"--single-process"
-]
-}
+  authStrategy: new LocalAuth({
+    dataPath: "./session"
+  }),
+  puppeteer: {
+    headless: true,
+    executablePath: puppeteer.executablePath(),
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process"
+    ]
+  }
 });
 
+// QR
 client.on('qr', qr => {
-qrcode.generate(qr, { small: true });
+  qrcode.generate(qr, { small: true });
 });
 
+// conectado
 client.on('ready', () => {
-console.log('Bot conectado a WhatsApp');
+  console.log('✅ Bot conectado a WhatsApp');
 });
 
+// desconectado
+client.on('disconnected', (reason) => {
+  console.log('❌ Bot desconectado:', reason);
+});
+
+// mensajes
 client.on('message', message => {
 
-let texto = message.body;
-console.log("Mensaje recibido:", texto);
+  let texto = message.body;
+  console.log("Mensaje recibido:", texto);
 
-if(texto.startsWith("Tarea:")){
+  if(texto.startsWith("Tarea:")){
 
-let partes = texto.split(":",4);
+    let partes = texto.split(":",4);
 
-if(partes.length < 4){
-client.sendMessage(message.from,"Formato incorrecto.\nUsa:\nTarea:Materia:Tarea:Fecha");
-return;
-}
+    if(partes.length < 4){
+      client.sendMessage(message.from,"Formato incorrecto.\nUsa:\nTarea:Materia:Tarea:Fecha");
+      return;
+    }
 
-let materia = partes[1].trim();
-let tarea = partes[2].trim();
-let fecha_entrega = partes[3].trim();
+    let materia = partes[1].trim();
+    let tarea = partes[2].trim();
+    let fecha_entrega = partes[3].trim();
 
-let fecha = new Date().toLocaleString();
+    let fecha = new Date().toLocaleString();
 
-db.prepare(
-"INSERT INTO tareas (materia, tarea, fecha, fecha_entrega) VALUES (?, ?, ?, ?)"
-).run(materia, tarea, fecha, fecha_entrega);
+    db.prepare(
+      "INSERT INTO tareas (materia, tarea, fecha, fecha_entrega) VALUES (?, ?, ?, ?)"
+    ).run(materia, tarea, fecha, fecha_entrega);
 
-client.sendMessage(
-message.from,
+    client.sendMessage(
+      message.from,
 `✅ Tarea guardada
 
 📚 Materia: ${materia}
 📝 Tarea: ${tarea}
 📅 Entrega: ${fecha_entrega}`
-);
-
-}
+    );
+  }
 
 });
 
+// iniciar
 client.initialize();
