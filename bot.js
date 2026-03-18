@@ -18,24 +18,17 @@ db.prepare(`CREATE TABLE IF NOT EXISTS tareas (
 
 // obtener tareas
 app.get("/tareas", (req,res)=>{
-
 const rows = db.prepare(
 "SELECT * FROM tareas ORDER BY fecha_entrega ASC"
 ).all();
-
 res.json(rows);
-
 });
 
 // eliminar tarea
 app.delete("/tareas/:id",(req,res)=>{
-
 let id = req.params.id;
-
 db.prepare("DELETE FROM tareas WHERE id=?").run(id);
-
 res.json({ok:true});
-
 });
 
 app.get("/", (req,res)=>{
@@ -48,13 +41,16 @@ console.log("Servidor web corriendo en puerto", PORT);
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const puppeteer = require("puppeteer");
 
+// ✅ CLIENT BIEN DEFINIDO (SIN DUPLICADOS)
 const client = new Client({
 authStrategy: new LocalAuth({
 dataPath: "./session"
 }),
 puppeteer: {
 headless: true,
+executablePath: puppeteer.executablePath(),
 args: [
 "--no-sandbox",
 "--disable-setuid-sandbox",
@@ -78,7 +74,6 @@ console.log('Bot conectado a WhatsApp');
 client.on('message_create', message => {
 
 let texto = message.body;
-
 console.log("Mensaje recibido:", texto);
 
 if(texto.startsWith("Tarea:")){
