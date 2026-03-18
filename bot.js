@@ -1,29 +1,29 @@
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("tareas.db");
+const Database = require("better-sqlite3");
+const db = new Database("tareas.db");
 
 const express = require('express');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 app.use(express.json());
 
-db.run(`CREATE TABLE IF NOT EXISTS tareas (
+db.prepare(`CREATE TABLE IF NOT EXISTS tareas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     materia TEXT,
     tarea TEXT,
     fecha TEXT,
     fecha_entrega TEXT
-)`);
+)`).run();
 
 // obtener tareas
 app.get("/tareas", (req,res)=>{
 
-db.all("SELECT * FROM tareas ORDER BY fecha_entrega ASC", [], (err,rows)=>{
+const rows = db.prepare(
+"SELECT * FROM tareas ORDER BY fecha_entrega ASC"
+).all();
 
 res.json(rows);
-
-});
 
 });
 
@@ -32,18 +32,18 @@ app.delete("/tareas/:id",(req,res)=>{
 
 let id = req.params.id;
 
-db.run("DELETE FROM tareas WHERE id=?", [id], ()=>{
+db.prepare("DELETE FROM tareas WHERE id=?").run(id);
 
 res.json({ok:true});
 
 });
 
-});
 app.get("/", (req,res)=>{
 res.send("Bot de tareas funcionando");
 });
+
 app.listen(PORT, () => {
-console.log("Servidor web corriendo en http://localhost:3000");
+console.log("Servidor web corriendo en puerto", PORT);
 });
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
@@ -96,10 +96,9 @@ let fecha_entrega = partes[3].trim();
 
 let fecha = new Date().toLocaleString();
 
-db.run(
-"INSERT INTO tareas (materia, tarea, fecha, fecha_entrega) VALUES (?, ?, ?, ?)",
-[materia, tarea, fecha, fecha_entrega]
-);
+db.prepare(
+"INSERT INTO tareas (materia, tarea, fecha, fecha_entrega) VALUES (?, ?, ?, ?)"
+).run(materia, tarea, fecha, fecha_entrega);
 
 client.sendMessage(
 message.from,
