@@ -2,8 +2,8 @@
   "name": "bot-tareas",
   "version": "1.0.0",
   "engines": {
-  "node": "20.x"
-},
+    "node": "20.x"
+  },
   "description": "",
   "main": "bot.js",
   "scripts": {
@@ -15,9 +15,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "better-sqlite3": "^9.4.0",
     "express": "^5.2.1",
     "qrcode-terminal": "^0.12.0",
-    "better-sqlite3": "^9.4.0",
+    "sqlite3": "^5.1.7",
     "whatsapp-web.js": "^1.34.6"
   }
 }
